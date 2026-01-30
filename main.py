@@ -154,7 +154,9 @@ def get_ipos(request: Request,
 
 @app.get("/ipos/{ipo_id}")
 @limiter.limit("100/minute")
+
 def get_ipo_by_id(request: Request,
+
     ipo_id: int,
     api_key: str = Depends(verify_api_key)
 ):
@@ -198,7 +200,9 @@ def get_ipo_by_id(request: Request,
 
 @app.get("/ipos/latest")
 @limiter.limit("100/minute")
+
 def get_latest_ipos(request: Request,
+
     limit: int = Query(10, ge=1, le=100, description="Number of latest IPOs"),
     api_key: str = Depends(verify_api_key)
 ):
