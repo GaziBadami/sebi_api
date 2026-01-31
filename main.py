@@ -99,7 +99,7 @@ def get_ipos(request: Request,
         cursor = conn.cursor(dictionary=True)
         
         # Build query
-        query = "SELECT filing_date, company_name, pdf_urls FROM ipos WHERE 1=1"
+        query = "SELECT filing_date, company_name, pdf_download_urls FROM ipos WHERE 1=1"
         params = []
         
         if company:
@@ -111,7 +111,7 @@ def get_ipos(request: Request,
             params.append(date)
         
         # Get total count
-        count_query = query.replace("SELECT filing_date, company_name, pdf_urls", "SELECT COUNT(*)")
+        count_query = query.replace("SELECT filing_date, company_name, pdf_download_urls", "SELECT COUNT(*)")
         cursor.execute(count_query, params)
         total_count = cursor.fetchone()['COUNT(*)']
         
@@ -129,7 +129,7 @@ def get_ipos(request: Request,
             {
                 "filing_date": row['filing_date'],
                 "company_name": row['company_name'],
-                "pdf_url": row['pdf_urls']
+                "pdf_download_url": row['pdf_download_urls']
             }
             for row in results
         ]
@@ -151,52 +151,8 @@ def get_ipos(request: Request,
         logger.error(f"Error in get_ipos: {str(e)}")
         close_connection(conn)
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
 
-@app.get("/ipos/{ipo_id}")
-@limiter.limit("100/minute")
-
-def get_ipo_by_id(request: Request,
-
-    ipo_id: int,
-    api_key: str = Depends(verify_api_key)
-):
-    """
-    Get a single IPO by its ID
-    
-    **Authentication Required**: Include X-API-Key header
-    """
-    
-    logger.info(f"GET /ipos/{ipo_id}")
-    
-    conn = get_database_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    
-    try:
-        cursor = conn.cursor(dictionary=True)
-        
-        query = "SELECT filing_date, company_name, pdf_urls FROM ipos WHERE id = %s"
-        cursor.execute(query, (ipo_id,))
-        result = cursor.fetchone()
-        
-        cursor.close()
-        close_connection(conn)
-        
-        if not result:
-            raise HTTPException(status_code=404, detail="IPO not found")
-        
-        return {
-            "filing_date": result['filing_date'],
-            "company_name": result['company_name'],
-            "pdf_url": result['pdf_urls']
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in get_ipo_by_id: {str(e)}")
-        close_connection(conn)
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @app.get("/ipos/latest")
 @limiter.limit("100/minute")
@@ -222,7 +178,7 @@ def get_latest_ipos(request: Request,
         cursor = conn.cursor(dictionary=True)
         
         query = """
-            SELECT filing_date, company_name, pdf_urls 
+            SELECT filing_date, company_name, pdf_download_urls 
             FROM ipos 
             ORDER BY id DESC 
             LIMIT %s
@@ -237,7 +193,7 @@ def get_latest_ipos(request: Request,
             {
                 "filing_date": row['filing_date'],
                 "company_name": row['company_name'],
-                "pdf_url": row['pdf_urls']
+                "pdf_download_url": row['pdf_download_urls']
             }
             for row in results
         ]
@@ -249,5 +205,51 @@ def get_latest_ipos(request: Request,
     
     except Exception as e:
         logger.error(f"Error in get_latest_ipos: {str(e)}")
+        close_connection(conn)
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")    
+
+@app.get("/ipos/{ipo_id}")
+@limiter.limit("100/minute")
+
+def get_ipo_by_id(request: Request,
+
+    ipo_id: int,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Get a single IPO by its ID
+    
+    **Authentication Required**: Include X-API-Key header
+    """
+    
+    logger.info(f"GET /ipos/{ipo_id}")
+    
+    conn = get_database_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        query = "SELECT filing_date, company_name, pdf_download_urls FROM ipos WHERE id = %s"
+        cursor.execute(query, (ipo_id,))
+        result = cursor.fetchone()
+        
+        cursor.close()
+        close_connection(conn)
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="IPO not found")
+        
+        return {
+            "filing_date": result['filing_date'],
+            "company_name": result['company_name'],
+            "pdf_download_url": result['pdf_download_urls']
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_ipo_by_id: {str(e)}")
         close_connection(conn)
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
