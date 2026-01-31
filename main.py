@@ -99,7 +99,7 @@ def get_ipos(request: Request,
         cursor = conn.cursor(dictionary=True)
         
         # Build query
-        query = "SELECT filing_date, company_name, pdf_download_urls FROM ipos WHERE 1=1"
+        query = "SELECT filing_date, company_name, pdf_download_url FROM ipos WHERE 1=1"
         params = []
         
         if company:
@@ -111,7 +111,7 @@ def get_ipos(request: Request,
             params.append(date)
         
         # Get total count
-        count_query = query.replace("SELECT filing_date, company_name, pdf_download_urls", "SELECT COUNT(*)")
+        count_query = query.replace("SELECT filing_date, company_name, pdf_download_url", "SELECT COUNT(*)")
         cursor.execute(count_query, params)
         total_count = cursor.fetchone()['COUNT(*)']
         
@@ -129,7 +129,7 @@ def get_ipos(request: Request,
             {
                 "filing_date": row['filing_date'],
                 "company_name": row['company_name'],
-                "pdf_download_url": row['pdf_download_urls']
+                "pdf_download_url": row['pdf_download_url']
             }
             for row in results
         ]
@@ -178,7 +178,7 @@ def get_latest_ipos(request: Request,
         cursor = conn.cursor(dictionary=True)
         
         query = """
-            SELECT filing_date, company_name, pdf_download_urls 
+            SELECT filing_date, company_name, pdf_download_url 
             FROM ipos 
             ORDER BY id DESC 
             LIMIT %s
@@ -193,7 +193,7 @@ def get_latest_ipos(request: Request,
             {
                 "filing_date": row['filing_date'],
                 "company_name": row['company_name'],
-                "pdf_download_url": row['pdf_download_urls']
+                "pdf_download_url": row['pdf_download_url']
             }
             for row in results
         ]
@@ -231,7 +231,7 @@ def get_ipo_by_id(request: Request,
     try:
         cursor = conn.cursor(dictionary=True)
         
-        query = "SELECT filing_date, company_name, pdf_download_urls FROM ipos WHERE id = %s"
+        query = "SELECT filing_date, company_name, pdf_download_url FROM ipos WHERE id = %s"
         cursor.execute(query, (ipo_id,))
         result = cursor.fetchone()
         
@@ -244,7 +244,7 @@ def get_ipo_by_id(request: Request,
         return {
             "filing_date": result['filing_date'],
             "company_name": result['company_name'],
-            "pdf_download_url": result['pdf_download_urls']
+            "pdf_download_url": result['pdf_download_url']
         }
     
     except HTTPException:
